@@ -50,7 +50,7 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 			node := strings.Split(line, ",")[0]
 			_, key := nodes[node]
 			if !key {
-				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0}
+				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0, ""}
 			}
 			freemem, _ := strconv.ParseFloat(strings.Split(line, ",")[1], 64)
 			totalmem, _ := strconv.ParseFloat(strings.Split(line, ",")[2], 64)
