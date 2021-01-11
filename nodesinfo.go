@@ -21,7 +21,7 @@ type NodesInfoMetrics struct {
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
 	//sinfo -e -N -h -o%n%e%m%c%O
-	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e/%m/%c/%O")
+	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e,%m,%c,%O")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -50,13 +50,11 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 			if !key {
 				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0}
 			}
-			info := strings.Split(line, ",")[1]
-			//info := strings.Split(strings.TrimSpace(line), "/")
-			freemem, _ := strconv.ParseFloat(strings.Split(info, "/")[0], 64)
-			totalmem, _ := strconv.ParseFloat(strings.Split(info, "/")[1], 64)
+			freemem, _ := strconv.ParseFloat(strings.Split(line, ",")[1], 64)
+			totalmem, _ := strconv.ParseFloat(strings.Split(line, ",")[2], 64)
 			allocmem := totalmem - freemem
-			cpus, _ := strconv.ParseFloat(strings.Split(info, "/")[2], 64)
-			cpuload, _ := strconv.ParseFloat(strings.Split(info, "/")[3], 64)
+			cpus, _ := strconv.ParseFloat(strings.Split(line, ",")[3], 64)
+			cpuload, _ := strconv.ParseFloat(strings.Split(line, ",")[4], 64)
 			nodes[node].freemem = freemem
 			nodes[node].totalmem = totalmem
 			nodes[node].allocmem = allocmem
