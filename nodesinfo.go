@@ -83,12 +83,13 @@ func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 
 // NewNodesInfoCollector function
 func NewNodesInfoCollector() *NodesInfoCollector {
+	labels := []string{"node"}
 	return &NodesInfoCollector{
-		freemem:  prometheus.NewDesc("slurm_nodes_freemem", "Free node memory (MB)", nil, nil),
-		allocmem: prometheus.NewDesc("slurm_nodes_allocmem", "Allocated node memory (MB)", nil, nil),
-		totalmem: prometheus.NewDesc("slurm_nodes_totalmem", "Total node memory (MB)", nil, nil),
-		cpus:     prometheus.NewDesc("slurm_nodes_cpus", "Number of node cpus", nil, nil),
-		cpuload:  prometheus.NewDesc("slurm_nodes_cpuload", "Node cpu load", nil, nil),
+		freemem:  prometheus.NewDesc("slurm_nodes_freemem", "Free node memory (MB)", labels, nil),
+		allocmem: prometheus.NewDesc("slurm_nodes_allocmem", "Allocated node memory (MB)", labels, nil),
+		totalmem: prometheus.NewDesc("slurm_nodes_totalmem", "Total node memory (MB)", labels, nil),
+		cpus:     prometheus.NewDesc("slurm_nodes_cpus", "Number of node cpus", labels, nil),
+		cpuload:  prometheus.NewDesc("slurm_nodes_cpuload", "Node cpu load", labels, nil),
 	}
 }
 
