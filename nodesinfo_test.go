@@ -13,7 +13,13 @@ func TestParseNodesInfoMetrics(t *testing.T) {
 		t.Fatalf("Can not open test data: %v", err)
 	}
 	data, err := ioutil.ReadAll(file)
-	t.Logf("%+v", ParseNodesInfoMetrics(data))
+	//t.Error(data)
+	metrics := ParseNodesInfoMetrics(data)
+	for k, v := range metrics {
+		t.Log(k, v)
+	}
+	//t.Logf("%+v", ParseNodesInfoMetrics(data))
+
 }
 
 /*func TestNodesInfoGetMetrics(t *testing.T) {

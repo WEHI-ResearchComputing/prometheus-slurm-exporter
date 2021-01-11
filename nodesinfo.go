@@ -51,6 +51,7 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0}
 			}
 			info := strings.Split(line, ",")[1]
+			//info := strings.Split(strings.TrimSpace(line), "/")
 			freemem, _ := strconv.ParseFloat(strings.Split(info, "/")[0], 64)
 			totalmem, _ := strconv.ParseFloat(strings.Split(info, "/")[1], 64)
 			allocmem := totalmem - freemem
