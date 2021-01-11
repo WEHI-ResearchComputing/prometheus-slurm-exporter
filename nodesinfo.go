@@ -75,7 +75,7 @@ func NodesInfoData() []byte {
  * https://godoc.org/github.com/prometheus/client_golang/prometheus#Collector
  */
 
-func NewNodesInfoCollector() *NodesCollector {
+func NewNodesInfoCollector() *NodesInfoCollector {
 	return &NodesInfoCollector{
 		alloc: prometheus.NewDesc("slurm_nodesi_alloc", "Allocated nodes", nil, nil),
 		comp:  prometheus.NewDesc("slurm_nodesi_comp", "Completing nodes", nil, nil),
