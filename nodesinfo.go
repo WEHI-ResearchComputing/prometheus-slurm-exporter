@@ -20,7 +20,7 @@ type NodesInfoMetrics struct {
 
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
-	// sinfo -e -N -h -o%n,%e,%c,%O
+	//sinfo -e -N -h -o%n%e%m%c%O
 	cmd := exec.Command("sinfo", "-h -e -N", "-o%n,%e/%m/%c/%O")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -37,10 +37,10 @@ func NodesInfoData() []byte {
 }
 
 //ParseNodesInfoMetrics function parse return from Data function
-func ParseNodesInfoMetrics() map[string]*NodesInfoMetrics {
+func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 	nodes := make(map[string]*NodesInfoMetrics)
 
-	lines := strings.Split(string(NodesInfoData()), "\n")
+	lines := strings.Split(string(input), "\n")
 
 	for _, line := range lines {
 		if strings.Contains(line, ",") {
@@ -65,6 +65,11 @@ func ParseNodesInfoMetrics() map[string]*NodesInfoMetrics {
 	}
 
 	return nodes
+}
+
+//NodesInfoGetMetrics fun
+func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
+	return ParseNodesInfoMetrics(NodesData())
 }
 
 /*
@@ -105,7 +110,7 @@ func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 
 //Collect function
 func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
-	pm := ParseNodesInfoMetrics()
+	pm := NodesInfoGetMetrics()
 	for p := range pm {
 		if pm[p].allocmem > 0 {
 			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue, pm[p].allocmem, p)
