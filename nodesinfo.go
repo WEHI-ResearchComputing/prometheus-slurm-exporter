@@ -120,19 +120,19 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	pm := NodesInfoGetMetrics()
 	for p := range pm {
 		if pm[p].allocmem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue, pm[p].allocmem, p)
+			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue, pm[p].allocmem, p, pm[p].state)
 		}
 		if pm[p].freemem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue, pm[p].freemem, p)
+			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue, pm[p].freemem, p, pm[p].state)
 		}
 		if pm[p].totalmem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.totalmem, prometheus.GaugeValue, pm[p].totalmem, p)
+			ch <- prometheus.MustNewConstMetric(nic.totalmem, prometheus.GaugeValue, pm[p].totalmem, p, pm[p].state)
 		}
 		if pm[p].cpus > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.cpus, prometheus.GaugeValue, pm[p].cpus, p)
+			ch <- prometheus.MustNewConstMetric(nic.cpus, prometheus.GaugeValue, pm[p].cpus, p, pm[p].state)
 		}
 		if pm[p].cpuload > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue, pm[p].cpuload, p)
+			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue, pm[p].cpuload, p, pm[p].state)
 		}
 
 	}
