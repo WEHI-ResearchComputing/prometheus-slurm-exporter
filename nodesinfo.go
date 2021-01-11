@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
-	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -14,47 +12,16 @@ import (
 
 type NodesInfoMetrics struct {
 	freemem  float64
-	alloc    float64
+	allocmem float64
 	totalmem float64
 	cpus     float64
-	comp     float64
-}
-
-func NodesInfoGetMetrics() *NodesInfoMetrics {
-	return ParseNodesInfoMetrics(NodesInfoData())
-}
-
-func ParseNodesInfoMetrics(input []byte) *NodesInfoMetrics {
-	var nm NodesInfoMetrics
-	lines := strings.Split(string(input), "\n")
-
-	// Sort and remove all the duplicates from the 'sinfo' output
-	sort.Strings(lines)
-	lines_uniq := RemoveDuplicates(lines)
-
-	for _, line := range lines_uniq {
-		if strings.Contains(line, ",") {
-			split := strings.Split(line, ",")
-			count, _ := strconv.ParseFloat(strings.TrimSpace(split[0]), 64)
-			state := split[1]
-			alloc := regexp.MustCompile(`^alloc`)
-			comp := regexp.MustCompile(`^comp`)
-
-			switch {
-			case alloc.MatchString(state) == true:
-				nm.alloc += count
-			case comp.MatchString(state) == true:
-				nm.comp += count
-
-			}
-		}
-	}
-	return &nm
+	cpuload  float64
 }
 
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
-	cmd := exec.Command("sinfo", "-h", "-o %D,%T")
+	// sinfo -e -N -h -o%n,%e,%c,%O
+	cmd := exec.Command("sinfo", "-h -e -N", "-o%n,%e/%m/%c/%O")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -69,32 +36,91 @@ func NodesInfoData() []byte {
 	return out
 }
 
+//ParseNodesInfoMetrics function parse return from Data function
+func ParseNodesInfoMetrics() map[string]*NodesInfoMetrics {
+	nodes := make(map[string]*NodesInfoMetrics)
+
+	lines := strings.Split(string(NodesInfoData()), "\n")
+
+	for _, line := range lines {
+		if strings.Contains(line, ",") {
+			//node name
+			node := strings.Split(line, ",")[0]
+			_, key := nodes[node]
+			if !key {
+				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0}
+			}
+			info := strings.Split(line, ",")[1]
+			freemem, _ := strconv.ParseFloat(strings.Split(info, "/")[0], 64)
+			totalmem, _ := strconv.ParseFloat(strings.Split(info, "/")[1], 64)
+			allocmem := totalmem - freemem
+			cpus, _ := strconv.ParseFloat(strings.Split(info, "/")[2], 64)
+			cpuload, _ := strconv.ParseFloat(strings.Split(info, "/")[3], 64)
+			nodes[node].freemem = freemem
+			nodes[node].totalmem = totalmem
+			nodes[node].allocmem = allocmem
+			nodes[node].cpus = cpus
+			nodes[node].cpuload = cpuload
+		}
+	}
+
+	return nodes
+}
+
 /*
  * Implement the Prometheus Collector interface and feed the
  * Slurm scheduler metrics into it.
  * https://godoc.org/github.com/prometheus/client_golang/prometheus#Collector
  */
 
+// NewNodesInfoCollector function
 func NewNodesInfoCollector() *NodesInfoCollector {
 	return &NodesInfoCollector{
-		alloc: prometheus.NewDesc("slurm_nodesi_alloc", "Allocated nodes", nil, nil),
-		comp:  prometheus.NewDesc("slurm_nodesi_comp", "Completing nodes", nil, nil),
+		freemem:  prometheus.NewDesc("slurm_nodes_freemem", "Free node memory (MB)", nil, nil),
+		allocmem: prometheus.NewDesc("slurm_nodes_allocmem", "Allocated node memory (MB)", nil, nil),
+		totalmem: prometheus.NewDesc("slurm_nodes_totalmem", "Total node memory (MB)", nil, nil),
+		cpus:     prometheus.NewDesc("slurm_nodes_cpus", "Number of node cpus", nil, nil),
+		cpuload:  prometheus.NewDesc("slurm_nodes_cpuload", "Node cpu load", nil, nil),
 	}
 }
 
+//NodesInfoCollector function
 type NodesInfoCollector struct {
-	alloc *prometheus.Desc
-	comp  *prometheus.Desc
+	freemem  *prometheus.Desc
+	allocmem *prometheus.Desc
+	totalmem *prometheus.Desc
+	cpus     *prometheus.Desc
+	cpuload  *prometheus.Desc
 }
 
-// Send all metric descriptions
-func (nc *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- nc.alloc
-	ch <- nc.comp
+//Describe Send all metric descriptions
+func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- nic.freemem
+	ch <- nic.allocmem
+	ch <- nic.totalmem
+	ch <- nic.cpus
+	ch <- nic.cpuload
 
 }
-func (nc *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
-	nm := NodesInfoGetMetrics()
-	ch <- prometheus.MustNewConstMetric(nc.alloc, prometheus.GaugeValue, nm.alloc)
-	ch <- prometheus.MustNewConstMetric(nc.comp, prometheus.GaugeValue, nm.comp)
+
+//Collect function
+func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
+	pm := ParseNodesInfoMetrics()
+	for p := range pm {
+		if pm[p].allocmem > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue, pm[p].allocmem, p)
+		}
+		if pm[p].freemem > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue, pm[p].freemem, p)
+		}
+		if pm[p].totalmem > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.totalmem, prometheus.GaugeValue, pm[p].totalmem, p)
+		}
+		if pm[p].cpus > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.cpus, prometheus.GaugeValue, pm[p].cpus, p)
+		}
+		if pm[p].cpuload > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue, pm[p].cpuload, p)
+		}
+	}
 }
