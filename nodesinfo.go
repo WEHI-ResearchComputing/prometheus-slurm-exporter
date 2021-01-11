@@ -91,14 +91,7 @@ type NodesInfoCollector struct {
 func (nc *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nc.alloc
 	ch <- nc.comp
-	ch <- nc.down
-	ch <- nc.drain
-	ch <- nc.err
-	ch <- nc.fail
-	ch <- nc.idle
-	ch <- nc.maint
-	ch <- nc.mix
-	ch <- nc.resv
+
 }
 func (nc *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	nm := NodesInfoGetMetrics()
