@@ -17,21 +17,23 @@ package main
 
 import (
 	"flag"
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
-	"net/http"
 )
 
 func init() {
 	// Metrics have to be registered to be exposed
-	prometheus.MustRegister(NewSchedulerCollector())      // from scheduler.go
-	prometheus.MustRegister(NewQueueCollector())          // from queue.go
-	prometheus.MustRegister(NewNodesCollector())          // from nodes.go
-	prometheus.MustRegister(NewCPUsCollector())           // from cpus.go
-	prometheus.MustRegister(NewAccountsCollector())       // from accounts.go
-	prometheus.MustRegister(NewUsersCollector())          // from users.go
-	prometheus.MustRegister(NewPartitionsCollector())     // from partitions.go
+	prometheus.MustRegister(NewSchedulerCollector())  // from scheduler.go
+	prometheus.MustRegister(NewQueueCollector())      // from queue.go
+	prometheus.MustRegister(NewNodesCollector())      // from nodes.go
+	prometheus.MustRegister(NewNodesInfoCollector())  // from nodesinfo.go
+	prometheus.MustRegister(NewCPUsCollector())       // from cpus.go
+	prometheus.MustRegister(NewAccountsCollector())   // from accounts.go
+	prometheus.MustRegister(NewUsersCollector())      // from users.go
+	prometheus.MustRegister(NewPartitionsCollector()) // from partitions.go
 }
 
 var listenAddress = flag.String(
