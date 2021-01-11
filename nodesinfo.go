@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -45,7 +44,7 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 
 	for _, line := range lines {
 		if strings.Contains(line, ",") {
-			fmt.Print(line)
+
 			//node name
 			node := strings.Split(line, ",")[0]
 			_, key := nodes[node]
@@ -53,18 +52,18 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0}
 			}
 			freemem, _ := strconv.ParseFloat(strings.Split(line, ",")[1], 64)
-			/* totalmem, _ := strconv.ParseFloat(strings.Split(line, ",")[2], 64)
+			totalmem, _ := strconv.ParseFloat(strings.Split(line, ",")[2], 64)
 			allocmem := totalmem - freemem
 			cpus, _ := strconv.ParseFloat(strings.Split(line, ",")[3], 64)
 			cpuload, _ := strconv.ParseFloat(strings.Split(line, ",")[4], 64)
-			*/
+
 			nodes[node].freemem = freemem
-			/*
-				nodes[node].totalmem = totalmem
-				nodes[node].allocmem = allocmem
-				nodes[node].cpus = cpus
-				nodes[node].cpuload = cpuload
-			*/
+
+			nodes[node].totalmem = totalmem
+			nodes[node].allocmem = allocmem
+			nodes[node].cpus = cpus
+			nodes[node].cpuload = cpuload
+
 		}
 	}
 
@@ -73,7 +72,7 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 
 //NodesInfoGetMetrics fun
 func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
-	return ParseNodesInfoMetrics(NodesData())
+	return ParseNodesInfoMetrics(NodesInfoData())
 }
 
 /*
