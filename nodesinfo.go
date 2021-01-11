@@ -21,7 +21,7 @@ type NodesInfoMetrics struct {
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
 	//sinfo -e -N -h -o%n%e%m%c%O
-	cmd := exec.Command("sinfo", "-h -e -N", "-o%n,%e/%m/%c/%O")
+	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e/%m/%c/%O")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
