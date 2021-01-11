@@ -86,14 +86,13 @@ func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 
 // NewNodesInfoCollector function
 func NewNodesInfoCollector() *NodesInfoCollector {
-	labels := []string{"node"}
+	labels := []string{"node", "state"}
 	return &NodesInfoCollector{
 		freemem:  prometheus.NewDesc("slurm_node_freemem", "Free node memory (MB)", labels, nil),
 		allocmem: prometheus.NewDesc("slurm_node_allocmem", "Allocated node memory (MB)", labels, nil),
 		totalmem: prometheus.NewDesc("slurm_node_totalmem", "Total node memory (MB)", labels, nil),
 		cpus:     prometheus.NewDesc("slurm_node_cpus", "Number of node cpus", labels, nil),
 		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "Node cpu load", labels, nil),
-		state:    prometheus.NewDesc("slurm_node_state", "Node state", labels, nil),
 	}
 }
 
@@ -104,7 +103,6 @@ type NodesInfoCollector struct {
 	totalmem *prometheus.Desc
 	cpus     *prometheus.Desc
 	cpuload  *prometheus.Desc
-	state    *prometheus.Desc
 }
 
 //Describe Send all metric descriptions
@@ -114,7 +112,7 @@ func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nic.totalmem
 	ch <- nic.cpus
 	ch <- nic.cpuload
-	ch <- nic.state
+
 }
 
 //Collect function
@@ -136,8 +134,6 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		if pm[p].cpuload > 0 {
 			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue, pm[p].cpuload, p)
 		}
-		if pm[p].state != "" {
-			ch <- prometheus.MustNewConstMetric(nic.state, prometheus.GaugeValue, pm[p].state, p)
-		}
+
 	}
 }
