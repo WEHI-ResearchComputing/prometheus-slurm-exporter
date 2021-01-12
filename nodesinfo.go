@@ -201,7 +201,9 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	//sinfo -e -o%e,%f,alloc --state allocated
 	cmd := exec.Command("sinfo", "-h", "-e", "-o%e,%f,alloc", "--state allocated")
+	log.Println(cmd)
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	log.Println(data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
