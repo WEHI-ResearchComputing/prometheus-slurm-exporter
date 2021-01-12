@@ -146,9 +146,9 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 			}
 			if state == "drained" || state == "free" {
 				data[MetricKey{state, feature}] += free
-			} else if s == "mixed" {
+				/*} else if s == "mixed" {
 				data[MetricKey{"free", feature}] += free
-				data[MetricKey{"alloc", feature}] += alloc
+				data[MetricKey{"alloc", feature}] += alloc*/
 			} else {
 				data[MetricKey{state, feature}] += alloc
 			}
