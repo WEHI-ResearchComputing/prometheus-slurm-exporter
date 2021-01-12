@@ -185,13 +185,13 @@ func ParseNodesGPUMetrics(input []byte) map[MetricKey]float64 {
 				data[MetricKey{state, feature}] = 0
 			}
 			if state == "mixed" {
-				data[MetricKey{"mixed_free", feature}] += total - alloc
+				data[MetricKey{"free", feature}] += total - alloc
+			} else if state == "drained*" {
+				data[MetricKey{"drained", feature}] += total
+			} else if state == "idle" {
+				data[MetricKey{"free", feature}] += total
 			}
-			if state == "drained" || state == "idle" {
-				data[MetricKey{state, feature}] += total
-			} else {
-				data[MetricKey{state, feature}] += alloc
-			}
+			data[MetricKey{"alloc", feature}] += alloc
 
 		}
 	}
