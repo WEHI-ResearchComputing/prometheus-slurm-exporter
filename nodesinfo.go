@@ -213,13 +213,14 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	//sinfo -e -o%e,%f,alloc --state allocated
 	cmd := exec.Command("sinfo", "-h", "-e", "--state=allocated", "-OAllocMem:10:,FreeMem:10:,Features:10,:alloc")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
+
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10:,Features:10,:free", "--state=idle")
+	cmd = exec.Command("sinfo", "-h", "-e", "--state=idle", "-OAllocMem:10:,FreeMem:10:,Features:10,:free")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -227,7 +228,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10:,:drained", "--state=drained")
+	cmd = exec.Command("sinfo", "-h", "-e", "--state=drained", "-OAllocMem:10:,FreeMem:10:,:drained")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -235,7 +236,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10:,Features:10,:maint", "--state=maint")
+	cmd = exec.Command("sinfo", "-h", "-e", "--state=maint", "-OAllocMem:10:,FreeMem:10:,Features:10,:maint")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -244,7 +245,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 	}
 
-	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10:,Features:10,:completing", "--state=completing")
+	cmd = exec.Command("sinfo", "-h", "-e", "--state=completing", "-OAllocMem:10:,FreeMem:10:,Features:10,:completing")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
