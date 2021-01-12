@@ -139,6 +139,10 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 			free, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
 			//total, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[2]), 64)
 			s := strings.TrimSpace(strings.Split(line, ":")[3])
+			_, ok := data[MetricKey{state, feature}]
+			if !ok {
+				data[MetricKey{state, feature}] = 0
+			}
 			if state == "drained" || state == "free" {
 				data[MetricKey{state, feature}] += free
 			} else if s == "mixed" {
