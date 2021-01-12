@@ -147,6 +147,7 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 			} else {
 				data[MetricKey{state, feature}] += alloc
 			}
+			log.Println(data[MetricKey{state, feature}])
 
 		}
 	}
