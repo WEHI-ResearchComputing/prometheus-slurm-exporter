@@ -36,11 +36,33 @@ type NodesInfoMetrics struct {
 	feature  string
 	weight   string
 }
+type MetricKey struct {
+	state   string
+	feature string
+}
 
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
 	//sinfo -e -N -h -o%n,%e,%m,%c,%O,%T,%b,%w
 	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e,%m,%c,%O,%T,%b,%w")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+	out, _ := ioutil.ReadAll(stdout)
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+	return out
+}
+
+//NodesDataInfoData to execute a generic cmd that is sent as an argurment
+func NodesDataInfoData(cmd *exec.Cmd) []byte {
+	//sinfo -e -h -o%e,%T,%b
+	//cmd := exec.Command("sinfo", "-h", "-e", "-o%e,%T,%b")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -96,6 +118,27 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 	return nodes
 }
 
+/*ParseNodesDataMetrics function parse return from Data function
+and returns accumulative total grouped by feature and state
+*/
+func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
+	data := map[MetricKey]float64{}
+
+	lines := strings.Split(string(input), "\n")
+
+	for _, line := range lines {
+		if strings.Contains(line, ",") {
+
+			feature := strings.Split(line, ",")[2]
+			state := strings.Split(line, ",")[1]
+			value, _ := strconv.ParseFloat(strings.Split(line, ",")[0], 64)
+			data[MetricKey{state, feature}] += value
+
+		}
+	}
+	return data
+}
+
 //NodesInfoGetMetrics fun
 func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 	return ParseNodesInfoMetrics(NodesInfoData())
@@ -110,10 +153,12 @@ func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 // NewNodesInfoCollector function
 func NewNodesInfoCollector() *NodesInfoCollector {
 	labels := []string{"node", "state", "totalmem", "cpus", "feature", "weight"}
+	labelsbyte := []string{"state", "feature"}
 	return &NodesInfoCollector{
-		freemem:  prometheus.NewDesc("slurm_node_freemem", "Free node memory (MB)", labels, nil),
-		allocmem: prometheus.NewDesc("slurm_node_allocmem", "Allocated node memory (MB)", labels, nil),
-		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "Node cpu load", labels, nil),
+		freemem:  prometheus.NewDesc("slurm_node_freemem", "free node memory (MB)", labels, nil),
+		allocmem: prometheus.NewDesc("slurm_node_allocmem", "allocated node memory (MB)", labels, nil),
+		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "node cpu load", labels, nil),
+		bytes:    prometheus.NewDesc("slurm_nodes_bytes", "total size of allocated/requested memory", labelsbyte, nil),
 	}
 }
 
@@ -122,6 +167,7 @@ type NodesInfoCollector struct {
 	freemem  *prometheus.Desc
 	allocmem *prometheus.Desc
 	cpuload  *prometheus.Desc
+	bytes    *prometheus.Desc
 }
 
 //Describe Send all metric descriptions
@@ -129,7 +175,7 @@ func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nic.freemem
 	ch <- nic.allocmem
 	ch <- nic.cpuload
-
+	ch <- nic.bytes
 }
 
 //Collect function
@@ -149,5 +195,13 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				pm[p].cpuload, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
 
+	}
+	cmd := exec.Command("sinfo", "-h", "-e", "-o%e,%T,%b")
+	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] > 0 {
+			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
 	}
 }
