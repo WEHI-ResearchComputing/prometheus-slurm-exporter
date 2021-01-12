@@ -171,6 +171,7 @@ func ParseNodesGPUMetrics(input []byte) map[MetricKey]float64 {
 			alloc := 0.0
 			total := 0.0
 			feature := strings.TrimSpace(strings.Split(line, ":")[3])
+			log.Printf(strings.TrimSpace(strings.Split(line, ":")[0]))
 			if strings.TrimSpace(strings.Split(line, ":")[0]) != "(null)" {
 				temp := strings.Split(strings.TrimSpace(strings.Split(line, ":")[1]), ":")[2][0:1]
 				alloc, _ = strconv.ParseFloat(temp, 64)
