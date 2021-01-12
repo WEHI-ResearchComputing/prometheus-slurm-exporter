@@ -16,7 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -209,7 +208,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state idle")
+	/*cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state idle")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -244,5 +243,5 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
-	}
+	}*/
 }
