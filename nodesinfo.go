@@ -171,7 +171,6 @@ func ParseNodesGPUMetrics(input []byte) map[MetricKey]float64 {
 			alloc := 0.0
 			total := 0.0
 			feature := strings.TrimSpace(strings.Split(line, "-")[3])
-			log.Printf(strings.TrimSpace(strings.Split(line, "-")[0]))
 			if strings.TrimSpace(strings.Split(line, "-")[0]) != "(null)" {
 				temp := strings.Split(strings.TrimSpace(strings.Split(line, "-")[1]), ":")[2][0:1]
 				alloc, _ = strconv.ParseFloat(temp, 64)
@@ -219,6 +218,7 @@ func NewNodesInfoCollector() *NodesInfoCollector {
 		allocmem: prometheus.NewDesc("slurm_node_allocmem", "allocated node memory (MB)", labels, nil),
 		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "node cpu load", labels, nil),
 		bytes:    prometheus.NewDesc("slurm_nodes_bytes", "total size of allocated/requested memory", labelsbyte, nil),
+		gpus:     prometheus.NewDesc("slurm_nodes_bytes", "total size of allocated/requested memory", labelsbyte, nil),
 	}
 }
 
@@ -228,6 +228,7 @@ type NodesInfoCollector struct {
 	allocmem *prometheus.Desc
 	cpuload  *prometheus.Desc
 	bytes    *prometheus.Desc
+	gpus     *prometheus.Desc
 }
 
 //Describe Send all metric descriptions
@@ -236,6 +237,7 @@ func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nic.allocmem
 	ch <- nic.cpuload
 	ch <- nic.bytes
+	ch <- nic.gpus
 }
 
 //Collect function
@@ -303,7 +305,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	data = ParseNodesGPUMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
-			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+			ch <- prometheus.MustNewConstMetric(nic.gpus, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
 	}
