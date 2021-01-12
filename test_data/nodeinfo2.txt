@@ -1,22 +1,39 @@
-460800    :Broadwell :mixed     :
-107520    :Broadwell :mixed     :
-90072     :Skylake   :mixed     :
-303720    :Skylake   :mixed     :
-60048     :Skylake   :mixed     :
-459408    :Broadwell :mixed     :
-460104    :Broadwell :mixed     :
-152208    :Broadwell :mixed     :
-92160     :Broadwell :mixed     :
-106128    :Broadwell :mixed     :
-91464     :Broadwell :mixed     :
-30720     :Broadwell :mixed     :
-108544    :Broadwell :mixed     :
-109200    :Broadwell :mixed     :
-106824    :Broadwell :mixed     :
-105432    :Broadwell :mixed     :
-102152    :Broadwell :mixed     :
-0         :Skylake   :idle      :
-0         :(null)    :drained*  :
-9216      :(null)    :mixed     :
-105251    :(null)    :mixed     :
-0         :(null)    :idle      :
+460800    :211088    :Broadwell :mixed               :
+107520    :91315     :Broadwell :mixed               :
+90072     :1031092   :Skylake   :mixed               :
+303720    :1351761   :Skylake   :mixed               :
+60048     :955486    :Skylake   :mixed               :
+384000    :275765    :Broadwell :mixed               :
+460800    :340584    :Broadwell :mixed               :
+460800    :371423    :Broadwell :mixed               :
+460800    :355546    :Broadwell :mixed               :
+460800    :197995    :Broadwell :mixed               :
+460800    :397475    :Broadwell :mixed               :
+459408    :369001    :Broadwell :mixed               :
+460104    :369528    :Broadwell :mixed               :
+152208    :305678    :Broadwell :mixed               :
+92160     :67158     :Broadwell :mixed               :
+92160     :65311     :Broadwell :mixed               :
+92160     :64180     :Broadwell :mixed               :
+106128    :67269     :Broadwell :mixed               :
+92160     :36328     :Broadwell :mixed               :
+106128    :72109     :Broadwell :mixed               :
+91464     :57964     :Broadwell :mixed               :
+30720     :70993     :Broadwell :mixed               :
+108544    :98614     :Broadwell :mixed               :
+108544    :67228     :Broadwell :mixed               :
+109200    :78655     :Broadwell :mixed               :
+106824    :65743     :Broadwell :mixed               :
+105432    :56938     :Broadwell :mixed               :
+92160     :38364     :Broadwell :mixed               :
+102152    :63140     :Broadwell :mixed               :
+92160     :50079     :Broadwell :mixed               :
+106128    :24497     :Broadwell :mixed               :
+92160     :23364     :Broadwell :mixed               :
+106824    :46221     :Broadwell :mixed               :
+0         :1359405   :Skylake   :idle                :
+0         :108394    :(null)    :drained*            :
+9216      :104862    :(null)    :mixed               :
+105251    :96991     :(null)    :mixed               :
+105251    :97426     :(null)    :mixed               :
+0         :104981    :(null)    :idle                :

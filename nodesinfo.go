@@ -129,9 +129,10 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 	for _, line := range lines {
 		if strings.Contains(line, ":") {
 
-			feature := strings.TrimSpace(strings.Split(line, ":")[1])
-			state := strings.TrimSpace(strings.Split(line, ":")[2])
+			feature := strings.TrimSpace(strings.Split(line, ":")[2])
+			state := strings.TrimSpace(strings.Split(line, ":")[3])
 			alloc, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[0]), 64)
+			//free, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
 
 			data[MetricKey{state, feature}] += alloc
 
@@ -197,8 +198,8 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 	}
-	//sinfo -e -h -OAllocMem:10:,Features:10,StateLong:10
-	cmd := exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,StateLong:10")
+	//sinfo -e -h -OAllocMem:10:,FreeMem:10,Features:10,StateLong
+	cmd := exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10,Features:10,StateLong")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
