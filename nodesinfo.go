@@ -218,7 +218,7 @@ func NewNodesInfoCollector() *NodesInfoCollector {
 		allocmem: prometheus.NewDesc("slurm_node_allocmem", "allocated node memory (MB)", labels, nil),
 		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "node cpu load", labels, nil),
 		bytes:    prometheus.NewDesc("slurm_nodes_bytes", "total size of allocated/requested memory", labelsbyte, nil),
-		gpus:     prometheus.NewDesc("slurm_nodes_bytes", "total size of allocated/requested memory", labelsbyte, nil),
+		gpus:     prometheus.NewDesc("slurm_nodes_gpus", "total size of allocated/requested memory", labelsbyte, nil),
 	}
 }
 
