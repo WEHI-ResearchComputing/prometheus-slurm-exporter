@@ -34,7 +34,7 @@ func TestParseNodesDataMetrics(t *testing.T) {
 	metrics := ParseNodesDataMetrics(data)
 	//.Error(metrics)
 	for k, v := range metrics {
-		//t.Error(k, v)
+		t.Error(k, v)
 		t.Log(k, v)
 	}
 	//t.Logf("%+v", ParseNodesInfoMetrics(data))

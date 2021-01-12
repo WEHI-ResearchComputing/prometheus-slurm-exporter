@@ -129,8 +129,8 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 	for _, line := range lines {
 		if strings.Contains(line, ":") {
 
-			feature := strings.TrimSpace(strings.Split(line, ":")[2])
-			state := strings.TrimSpace(strings.Split(line, ":")[3])
+			feature := strings.TrimSpace(strings.Split(line, ":")[1])
+			state := strings.TrimSpace(strings.Split(line, ":")[2])
 			alloc, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[0]), 64)
 
 			data[MetricKey{state, feature}] += alloc
@@ -183,15 +183,15 @@ func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	pm := NodesInfoGetMetrics()
 	for p := range pm {
-		if pm[p].allocmem > 0 {
+		if pm[p].allocmem >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue,
 				pm[p].allocmem, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
-		if pm[p].freemem > 0 {
+		if pm[p].freemem >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue,
 				pm[p].freemem, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
-		if pm[p].cpuload > 0 {
+		if pm[p].cpuload >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue,
 				pm[p].cpuload, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
@@ -201,7 +201,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	cmd := exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,StateLong:10")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
-		if data[d] > 0 {
+		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
