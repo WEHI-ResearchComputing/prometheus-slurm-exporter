@@ -157,6 +157,47 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 	return data
 }
 
+/*ParseNodesGPUMetrics function parse return from Data function
+and returns accumulative total of GPU used/available grouped by feature and state
+*/
+func ParseNodesGPUMetrics(input []byte) map[MetricKey]float64 {
+	//log.Println(input)
+	data := map[MetricKey]float64{}
+
+	lines := strings.Split(string(input), "\n")
+	for _, line := range lines {
+		//"-OGres:10:,GresUsed:10:,StateLong:10:,Features:10"
+		if strings.Contains(line, ":") {
+			alloc := 0.0
+			total := 0.0
+			feature := strings.TrimSpace(strings.Split(line, ":")[3])
+			if strings.TrimSpace(strings.Split(line, ":")[0]) != "(null)" {
+				temp := strings.Split(strings.TrimSpace(strings.Split(line, ":")[1]), ":")[2][0:1]
+				alloc, _ = strconv.ParseFloat(temp, 64)
+				temp = strings.Split(strings.TrimSpace(strings.Split(line, ":")[0]), ":")[2][0:1]
+				total, _ = strconv.ParseFloat(temp, 64)
+			}
+
+			state := strings.TrimSpace(strings.Split(line, ":")[2])
+			_, ok := data[MetricKey{state, feature}]
+
+			if !ok {
+				data[MetricKey{state, feature}] = 0
+			}
+			if state == "mixed" {
+				data[MetricKey{"mixed_free", feature}] += total - alloc
+			}
+			if state == "drained" || state == "idle" {
+				data[MetricKey{state, feature}] += total
+			} else {
+				data[MetricKey{state, feature}] += alloc
+			}
+
+		}
+	}
+	return data
+}
+
 //NodesInfoGetMetrics fun
 func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 	return ParseNodesInfoMetrics(NodesInfoData())
@@ -251,6 +292,14 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 
 	cmd = exec.Command("sinfo", "-h", "-e", "--state=completing", "-OAllocMem:10:,FreeMem:10:,StateLong:10:,Features:10,:completing")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] >= 0 {
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
+	}
+	cmd = exec.Command("sinfo", "-h", "-e", "-OGres:10:,GresUsed:10:,StateLong:10:,Features:10,:completing")
+	data = ParseNodesGPUMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
