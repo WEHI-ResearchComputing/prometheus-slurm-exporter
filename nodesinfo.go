@@ -129,19 +129,21 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 
 	lines := strings.Split(string(input), "\n")
 	//log.Println(lines)
+	//-OAllocMem:10:,FreeMem:10:,Memory:10:,StateLong:10:,Features:10,:free
 	for _, line := range lines {
 		if strings.Contains(line, ":") {
 
-			feature := strings.TrimSpace(strings.Split(line, ":")[2])
-			state := strings.TrimSpace(strings.Split(line, ":")[3])
+			feature := strings.TrimSpace(strings.Split(line, ":")[4])
+			state := strings.TrimSpace(strings.Split(line, ":")[5])
 			alloc, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[0]), 64)
 			free, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
-			total, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
+			//total, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[2]), 64)
 			s := strings.TrimSpace(strings.Split(line, ":")[3])
 			if state == "drained" || state == "free" {
 				data[MetricKey{state, feature}] += free
-			} else {
-				data[MetricKey{state, feature}] += alloc
+			} else if s == "mixed" {
+				data[MetricKey{"free", feature}] += free
+				data[MetricKey{"alloc", feature}] += alloc
 			}
 
 		}
