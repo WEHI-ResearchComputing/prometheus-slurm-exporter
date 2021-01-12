@@ -1,3 +1,18 @@
+/* Copyright 2020 Julie Iskander
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
 package main
 
 import (
@@ -10,19 +25,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//NodesInfoMetrics struct with all info for individual nodes
 type NodesInfoMetrics struct {
 	freemem  float64
 	allocmem float64
-	totalmem float64
-	cpus     float64
+	totalmem string
+	cpus     string
 	cpuload  float64
 	state    string
+	feature  string
+	weight   string
 }
 
 // NodesInfoData Execute the sinfo command and return its output
 func NodesInfoData() []byte {
-	//sinfo -e -N -h -o%n,%e,%m,%c,%O,%T
-	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e,%m,%c,%O,%T")
+	//sinfo -e -N -h -o%n,%e,%m,%c,%O,%T,%b,%w
+	cmd := exec.Command("sinfo", "-h", "-e", "-N", "-o%n,%e,%m,%c,%O,%T,%b,%w")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +58,8 @@ func NodesInfoData() []byte {
 //ParseNodesInfoMetrics function parse return from Data function
 func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 	nodes := make(map[string]*NodesInfoMetrics)
-
+	//nodebytes := map[Key]float64{}
+	//nodecpus := map[Key]float64{}
 	lines := strings.Split(string(input), "\n")
 
 	for _, line := range lines {
@@ -50,22 +69,26 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 			node := strings.Split(line, ",")[0]
 			_, key := nodes[node]
 			if !key {
-				nodes[node] = &NodesInfoMetrics{0, 0, 0, 0, 0, ""}
+				nodes[node] = &NodesInfoMetrics{0, 0, "", "", 0, "", "", ""}
 			}
 			freemem, _ := strconv.ParseFloat(strings.Split(line, ",")[1], 64)
-			totalmem, _ := strconv.ParseFloat(strings.Split(line, ",")[2], 64)
-			allocmem := totalmem - freemem
-			cpus, _ := strconv.ParseFloat(strings.Split(line, ",")[3], 64)
+			totalmem := strings.Split(line, ",")[2]
+			t, _ := strconv.ParseFloat(totalmem, 64)
+			allocmem := t - freemem
+			cpus := strings.Split(line, ",")[3]
 			cpuload, _ := strconv.ParseFloat(strings.Split(line, ",")[4], 64)
 			state := strings.Split(line, ",")[5]
+			feature := strings.Split(line, ",")[6]
+			weight := strings.Split(line, ",")[7]
 
 			nodes[node].freemem = freemem
-
 			nodes[node].totalmem = totalmem
 			nodes[node].allocmem = allocmem
 			nodes[node].cpus = cpus
 			nodes[node].cpuload = cpuload
 			nodes[node].state = state
+			nodes[node].feature = feature
+			nodes[node].weight = weight
 
 		}
 	}
@@ -86,12 +109,10 @@ func NodesInfoGetMetrics() map[string]*NodesInfoMetrics {
 
 // NewNodesInfoCollector function
 func NewNodesInfoCollector() *NodesInfoCollector {
-	labels := []string{"node", "state"}
+	labels := []string{"node", "state", "totalmem", "cpus", "feature", "weight"}
 	return &NodesInfoCollector{
 		freemem:  prometheus.NewDesc("slurm_node_freemem", "Free node memory (MB)", labels, nil),
 		allocmem: prometheus.NewDesc("slurm_node_allocmem", "Allocated node memory (MB)", labels, nil),
-		totalmem: prometheus.NewDesc("slurm_node_totalmem", "Total node memory (MB)", labels, nil),
-		cpus:     prometheus.NewDesc("slurm_node_cpus", "Number of node cpus", labels, nil),
 		cpuload:  prometheus.NewDesc("slurm_node_cpuload", "Node cpu load", labels, nil),
 	}
 }
@@ -100,8 +121,6 @@ func NewNodesInfoCollector() *NodesInfoCollector {
 type NodesInfoCollector struct {
 	freemem  *prometheus.Desc
 	allocmem *prometheus.Desc
-	totalmem *prometheus.Desc
-	cpus     *prometheus.Desc
 	cpuload  *prometheus.Desc
 }
 
@@ -109,8 +128,6 @@ type NodesInfoCollector struct {
 func (nic *NodesInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nic.freemem
 	ch <- nic.allocmem
-	ch <- nic.totalmem
-	ch <- nic.cpus
 	ch <- nic.cpuload
 
 }
@@ -120,19 +137,16 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	pm := NodesInfoGetMetrics()
 	for p := range pm {
 		if pm[p].allocmem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue, pm[p].allocmem, p, pm[p].state)
+			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue,
+				pm[p].allocmem, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
 		if pm[p].freemem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue, pm[p].freemem, p, pm[p].state)
-		}
-		if pm[p].totalmem > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.totalmem, prometheus.GaugeValue, pm[p].totalmem, p, pm[p].state)
-		}
-		if pm[p].cpus > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.cpus, prometheus.GaugeValue, pm[p].cpus, p, pm[p].state)
+			ch <- prometheus.MustNewConstMetric(nic.freemem, prometheus.GaugeValue,
+				pm[p].freemem, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
 		if pm[p].cpuload > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue, pm[p].cpuload, p, pm[p].state)
+			ch <- prometheus.MustNewConstMetric(nic.cpuload, prometheus.GaugeValue,
+				pm[p].cpuload, p, pm[p].state, pm[p].totalmem, pm[p].cpus, pm[p].feature, pm[p].weight)
 		}
 
 	}
