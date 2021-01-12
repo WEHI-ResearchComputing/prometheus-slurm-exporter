@@ -36,6 +36,8 @@ type NodesInfoMetrics struct {
 	feature  string
 	weight   string
 }
+
+//MetricKey struct for the bytes/node metric
 type MetricKey struct {
 	state   string
 	feature string
@@ -127,14 +129,13 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 	lines := strings.Split(string(input), "\n")
 
 	for _, line := range lines {
-		if strings.Contains(line, ":") {
+		if strings.Contains(line, ",") {
 
-			feature := strings.TrimSpace(strings.Split(line, ":")[2])
-			state := strings.TrimSpace(strings.Split(line, ":")[3])
-			alloc, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[0]), 64)
-			//free, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
+			feature := strings.TrimSpace(strings.Split(line, ",")[1])
+			state := strings.TrimSpace(strings.Split(line, ",")[2])
+			d, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ",")[0]), 64)
 
-			data[MetricKey{state, feature}] += alloc
+			data[MetricKey{state, feature}] += d
 
 		}
 	}
@@ -198,9 +199,42 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 	}
-	//sinfo -e -h -OAllocMem:10:,FreeMem:10,Features:10,StateLong
-	cmd := exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,FreeMem:10,Features:10,StateLong")
+	//sinfo -e -o%e,%f,alloc --state allocated
+	cmd := exec.Command("sinfo", "-h", "-e", "-o%e,%f,alloc", "--state allocated")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] >= 0 {
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
+	}
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state idle")
+	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] >= 0 {
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
+	}
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,drained", "--state drained")
+	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] >= 0 {
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
+	}
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,maint", "--state maint")
+	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	for d := range data {
+		if data[d] >= 0 {
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
+				data[d], d.state, d.feature)
+		}
+	}
+
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,completing", "--state completing")
+	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
