@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -218,6 +219,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,drained", "--state drained")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	fmt.Println("1-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
@@ -226,6 +228,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,maint", "--state maint")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	fmt.Println("2-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
@@ -235,6 +238,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 
 	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,completing", "--state completing")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
+	fmt.Println("3-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
