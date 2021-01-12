@@ -200,7 +200,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] > 0 {
-			ch <- prometheus.MustNewConstMetric(nic.allocmem, prometheus.GaugeValue,
+			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
 	}
