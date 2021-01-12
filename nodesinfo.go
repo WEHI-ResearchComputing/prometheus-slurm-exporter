@@ -124,10 +124,11 @@ func ParseNodesInfoMetrics(input []byte) map[string]*NodesInfoMetrics {
 and returns accumulative total grouped by feature and state
 */
 func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
+	//log.Println(input)
 	data := map[MetricKey]float64{}
 
 	lines := strings.Split(string(input), "\n")
-
+	//log.Println(lines)
 	for _, line := range lines {
 		if strings.Contains(line, ",") {
 
@@ -200,7 +201,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 
 	}
 	//sinfo -e -o%e,%f,alloc --state allocated
-	cmd := exec.Command("sinfo", "-h", "-e", "-o%e,%f,alloc", "--state allocated")
+	cmd := exec.Command("sinfo", "-h", "-e","--state=allocated", "-o%e,%f,alloc")
 	log.Println(cmd)
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	log.Println(data)
