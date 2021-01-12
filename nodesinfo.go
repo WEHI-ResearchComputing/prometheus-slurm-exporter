@@ -228,7 +228,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "--state=drained", "-OAllocMem:10:,FreeMem:10:,:drained")
+	cmd = exec.Command("sinfo", "-h", "-e", "--state=drained", "-OAllocMem:10:,FreeMem:10:,Features:10,:drained")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
