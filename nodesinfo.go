@@ -201,17 +201,15 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 
 	}
 	//sinfo -e -o%e,%f,alloc --state allocated
-	cmd := exec.Command("sinfo", "-h", "-e","--state=allocated", "-o%e,%f,alloc")
-	log.Println(cmd)
+	cmd := exec.Command("sinfo", "-h", "-e", "--state=allocated", "-o%e,%f,alloc")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
-	log.Println(data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
 	}
-	/*cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state idle")
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state=idle")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -219,18 +217,16 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,drained", "--state drained")
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,drained", "--state=drained")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
-	fmt.Println("1-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,maint", "--state maint")
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,maint", "--state=maint")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
-	fmt.Println("2-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
@@ -238,13 +234,12 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 	}
 
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,completing", "--state completing")
+	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,completing", "--state=completing")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
-	fmt.Println("3-", data)
 	for d := range data {
 		if data[d] >= 0 {
 			ch <- prometheus.MustNewConstMetric(nic.bytes, prometheus.GaugeValue,
 				data[d], d.state, d.feature)
 		}
-	}*/
+	}
 }
