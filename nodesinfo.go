@@ -137,6 +137,7 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 			d, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ",")[0]), 64)
 			_, ok := data[MetricKey{state, feature}]
 			if !ok {
+
 				data[MetricKey{state, feature}] = 0
 			}
 			data[MetricKey{state, feature}] += d
@@ -204,7 +205,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 
 	}
 	//sinfo -e -o%e,%f,alloc --state allocated
-	cmd := exec.Command("sinfo", "-h", "-e", "--state=allocated", "-o%e,%f,alloc")
+	cmd := exec.Command("sinfo", "-h", "-e", "--state=allocated", "-OAllocMem:10:,Features:10,:alloc")
 	data := ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -212,7 +213,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,free", "--state=idle")
+	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,:free", "--state=idle")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -220,7 +221,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,drained", "--state=drained")
+	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,:drained", "--state=drained")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -228,7 +229,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,maint", "--state=maint")
+	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,:maint", "--state=maint")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
@@ -237,7 +238,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 	}
 
-	cmd = exec.Command("sinfo", "-h", "-e", "-o%e,%f,completing", "--state=completing")
+	cmd = exec.Command("sinfo", "-h", "-e", "-OAllocMem:10:,Features:10,:completing", "--state=completing")
 	data = ParseNodesDataMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
