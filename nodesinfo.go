@@ -138,7 +138,7 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 			alloc, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[0]), 64)
 			free, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[1]), 64)
 			//total, _ := strconv.ParseFloat(strings.TrimSpace(strings.Split(line, ":")[2]), 64)
-			s := strings.TrimSpace(strings.Split(line, ":")[3])
+			//s := strings.TrimSpace(strings.Split(line, ":")[3])
 			_, ok := data[MetricKey{state, feature}]
 			log.Println(data[MetricKey{state, feature}])
 			if !ok {
