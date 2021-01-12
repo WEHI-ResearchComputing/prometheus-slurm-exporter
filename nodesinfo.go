@@ -145,7 +145,7 @@ func ParseNodesDataMetrics(input []byte) map[MetricKey]float64 {
 				data[MetricKey{state, feature}] = 0
 			}
 			if s == "mixed" {
-				data[MetricKey{"free", feature}] += free
+				data[MetricKey{"mixed_free", feature}] += free
 			}
 			if state == "drained" || state == "free" {
 				data[MetricKey{state, feature}] += free
