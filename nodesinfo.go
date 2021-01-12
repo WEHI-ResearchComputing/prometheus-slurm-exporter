@@ -166,20 +166,20 @@ func ParseNodesGPUMetrics(input []byte) map[MetricKey]float64 {
 
 	lines := strings.Split(string(input), "\n")
 	for _, line := range lines {
-		//"-OGres:10:,GresUsed:10:,StateLong:10:,Features:10"
-		if strings.Contains(line, ":") {
+		//"-OGres:10-,GresUsed:10-,StateLong:10-,Features:10"
+		if strings.Contains(line, "-") {
 			alloc := 0.0
 			total := 0.0
-			feature := strings.TrimSpace(strings.Split(line, ":")[3])
-			log.Printf(strings.TrimSpace(strings.Split(line, ":")[0]))
-			if strings.TrimSpace(strings.Split(line, ":")[0]) != "(null)" {
-				temp := strings.Split(strings.TrimSpace(strings.Split(line, ":")[1]), ":")[2][0:1]
+			feature := strings.TrimSpace(strings.Split(line, "-")[3])
+			log.Printf(strings.TrimSpace(strings.Split(line, "-")[0]))
+			if strings.TrimSpace(strings.Split(line, "-")[0]) != "(null)" {
+				temp := strings.Split(strings.TrimSpace(strings.Split(line, "-")[1]), ":")[2][0:1]
 				alloc, _ = strconv.ParseFloat(temp, 64)
-				temp = strings.Split(strings.TrimSpace(strings.Split(line, ":")[0]), ":")[2][0:1]
+				temp = strings.Split(strings.TrimSpace(strings.Split(line, "-")[0]), ":")[2][0:1]
 				total, _ = strconv.ParseFloat(temp, 64)
 			}
 
-			state := strings.TrimSpace(strings.Split(line, ":")[2])
+			state := strings.TrimSpace(strings.Split(line, "-")[2])
 			_, ok := data[MetricKey{state, feature}]
 
 			if !ok {
@@ -299,7 +299,7 @@ func (nic *NodesInfoCollector) Collect(ch chan<- prometheus.Metric) {
 				data[d], d.state, d.feature)
 		}
 	}
-	cmd = exec.Command("sinfo", "-h", "-e", "-OGres:10:,GresUsed:10:,StateLong:10:,Features:10,:completing")
+	cmd = exec.Command("sinfo", "-h", "-e", "-OGres:10-,GresUsed:10-,StateLong:10-,Features:10")
 	data = ParseNodesGPUMetrics(NodesDataInfoData(cmd))
 	for d := range data {
 		if data[d] >= 0 {
