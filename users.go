@@ -113,11 +113,11 @@ func NewUsersCollector() *UsersCollector {
 		running:       prometheus.NewDesc("slurm_user_jobs_running", "Running jobs for user", labels, nil),
 		suspended:     prometheus.NewDesc("slurm_user_jobs_suspended", "Suspended jobs for user", labels, nil),
 		runningCpus:   prometheus.NewDesc("slurm_user_cpus_running", "Running cpus for user", labels, nil),
-		pendingCpus:   prometheus.NewDesc("slurm_user_cpus_running", "Pending cpus for user", labels, nil),
-		suspendedCpus: prometheus.NewDesc("slurm_user_cpus_running", "Suspended cpus for user", labels, nil),
-		runningMem:    prometheus.NewDesc("slurm_user_cpus_running", "Running memory (MB) for user", labels, nil),
-		pendingMem:    prometheus.NewDesc("slurm_user_cpus_running", "Pending memory (MB) for user", labels, nil),
-		suspendedMem:  prometheus.NewDesc("slurm_user_cpus_running", "Suspended memory (MB) for user", labels, nil),
+		pendingCpus:   prometheus.NewDesc("slurm_user_cpus_pending", "Pending cpus for user", labels, nil),
+		suspendedCpus: prometheus.NewDesc("slurm_user_cpus_suspended", "Suspended cpus for user", labels, nil),
+		runningMem:    prometheus.NewDesc("slurm_user_mem_running", "Running memory (MB) for user", labels, nil),
+		pendingMem:    prometheus.NewDesc("slurm_user_mem_pending", "Pending memory (MB) for user", labels, nil),
+		suspendedMem:  prometheus.NewDesc("slurm_user_mem_suspended", "Suspended memory (MB) for user", labels, nil),
 	}
 }
 
