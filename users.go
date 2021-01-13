@@ -70,7 +70,17 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 			state := strings.Split(line, "|")[2]
 			state = strings.ToLower(state)
 			cpus, _ := strconv.ParseFloat(strings.Split(line, "|")[3], 64)
-			mem, _ := strconv.ParseFloat(strings.Split(line, "|")[4], 64)
+			m := strings.Split(line, "|")[4]
+
+			mem := 0.0
+			if strings.HasSuffix(m, "G") {
+				m = m[:len(m)-1]
+				mem, _ = strconv.ParseFloat(m, 64)
+				mem *= 1024
+			} else if strings.HasSuffix(m, "M") {
+				m = m[:len(m)-1]
+				mem, _ = strconv.ParseFloat(m, 64)
+			}
 			pending := regexp.MustCompile(`^pending`)
 			running := regexp.MustCompile(`^running`)
 			suspended := regexp.MustCompile(`^suspended`)
