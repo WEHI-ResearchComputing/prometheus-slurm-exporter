@@ -171,8 +171,8 @@ func (uc *UsersCollector) Collect(ch chan<- prometheus.Metric) {
 		if um[u].pendingQOS > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.pendingQOS, prometheus.GaugeValue, um[u].pendingQOS, u)
 		}
-		if um[u].pendingQOS > 0 {
-			ch <- prometheus.MustNewConstMetric(uc.pendingOthers, prometheus.GaugeValue, um[u].pendingQOS, u)
+		if um[u].pendingOthers > 0 {
+			ch <- prometheus.MustNewConstMetric(uc.pendingOthers, prometheus.GaugeValue, um[u].pendingOthers, u)
 		}
 		if um[u].running > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.running, prometheus.GaugeValue, um[u].running, u)
