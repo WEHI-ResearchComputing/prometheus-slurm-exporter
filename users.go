@@ -48,6 +48,7 @@ as well as memory and cpus allocated for the job
 type UserJobMetrics struct {
 	pending       float64
 	pendingQOS    float64
+	pendingOthers float64
 	running       float64
 	suspended     float64
 	runningCpus   float64
@@ -69,7 +70,7 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 			user := strings.Split(line, "|")[1]
 			_, key := users[user]
 			if !key {
-				users[user] = &UserJobMetrics{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ""}
+				users[user] = &UserJobMetrics{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ""}
 			}
 			state := strings.Split(line, "|")[2]
 			state = strings.ToLower(state)
@@ -97,6 +98,8 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 				users[user].reason = reason
 				if strings.Contains(reason, "QOS") {
 					users[user].pendingQOS++
+				} else {
+					users[user].pendingOthers++
 				}
 
 			case running.MatchString(state) == true:
@@ -117,6 +120,7 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 type UsersCollector struct {
 	pending       *prometheus.Desc
 	pendingQOS    *prometheus.Desc
+	pendingOthers *prometheus.Desc
 	running       *prometheus.Desc
 	suspended     *prometheus.Desc
 	runningCpus   *prometheus.Desc
@@ -130,8 +134,9 @@ type UsersCollector struct {
 func NewUsersCollector() *UsersCollector {
 	labels := []string{"user"}
 	return &UsersCollector{
-		pending:       prometheus.NewDesc("slurm_user_jobs_pending", "Pending jobs for user", labels, nil),
+		pending:       prometheus.NewDesc("slurm_user_jobs_pending", "Total Pending jobs for user", labels, nil),
 		pendingQOS:    prometheus.NewDesc("slurm_user_jobs_pendingQOS", "Pending jobs for user due to QOS", labels, nil),
+		pendingOthers: prometheus.NewDesc("slurm_user_jobs_pendingOthers", "Pending jobs for user due to other reasons", labels, nil),
 		running:       prometheus.NewDesc("slurm_user_jobs_running", "Running jobs for user", labels, nil),
 		suspended:     prometheus.NewDesc("slurm_user_jobs_suspended", "Suspended jobs for user", labels, nil),
 		runningCpus:   prometheus.NewDesc("slurm_user_cpus_running", "Running cpus for user", labels, nil),
@@ -146,6 +151,7 @@ func NewUsersCollector() *UsersCollector {
 func (uc *UsersCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- uc.pending
 	ch <- uc.pendingQOS
+	ch <- uc.pendingOthers
 	ch <- uc.running
 	ch <- uc.suspended
 	ch <- uc.pendingCpus
@@ -164,6 +170,9 @@ func (uc *UsersCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		if um[u].pendingQOS > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.pendingQOS, prometheus.GaugeValue, um[u].pendingQOS, u)
+		}
+		if um[u].pendingQOS > 0 {
+			ch <- prometheus.MustNewConstMetric(uc.pendingOthers, prometheus.GaugeValue, um[u].pendingQOS, u)
 		}
 		if um[u].running > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.running, prometheus.GaugeValue, um[u].running, u)
