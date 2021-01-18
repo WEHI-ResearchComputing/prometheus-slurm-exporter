@@ -27,7 +27,7 @@ import (
 )
 
 func UsersData() []byte {
-	cmd := exec.Command("squeue", "-a", "-r", "-h", "-o %A|%u|%T|%C|%m")
+	cmd := exec.Command("squeue", "-a", "-r", "-h", "-o %A|%u|%T|%C|%m|%r")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +47,7 @@ as well as memory and cpus allocated for the job
 */
 type UserJobMetrics struct {
 	pending       float64
+	pendingQOS    float64
 	running       float64
 	suspended     float64
 	runningCpus   float64
@@ -55,24 +56,28 @@ type UserJobMetrics struct {
 	pendingMem    float64
 	runningMem    float64
 	suspendedMem  float64
+	reason        string
 }
 
 func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 	users := make(map[string]*UserJobMetrics)
 	lines := strings.Split(string(input), "\n")
+
 	for _, line := range lines {
+
 		if strings.Contains(line, "|") {
 			user := strings.Split(line, "|")[1]
 			_, key := users[user]
 			if !key {
-				users[user] = &UserJobMetrics{0, 0, 0, 0, 0, 0, 0, 0, 0}
+				users[user] = &UserJobMetrics{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ""}
 			}
 			state := strings.Split(line, "|")[2]
 			state = strings.ToLower(state)
 			cpus, _ := strconv.ParseFloat(strings.Split(line, "|")[3], 64)
 			m := strings.Split(line, "|")[4]
-
+			reason := strings.Split(line, "|")[5]
 			mem := 0.0
+
 			if strings.HasSuffix(m, "G") {
 				m = m[:len(m)-1]
 				mem, _ = strconv.ParseFloat(m, 64)
@@ -89,6 +94,11 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 				users[user].pending++
 				users[user].pendingCpus += cpus
 				users[user].pendingMem += mem
+				users[user].reason = reason
+				if strings.Contains(reason, "QOS") {
+					users[user].pendingQOS++
+				}
+
 			case running.MatchString(state) == true:
 				users[user].running++
 				users[user].runningCpus += cpus
@@ -106,6 +116,7 @@ func ParseUsersMetrics(input []byte) map[string]*UserJobMetrics {
 //UsersCollector struct
 type UsersCollector struct {
 	pending       *prometheus.Desc
+	pendingQOS    *prometheus.Desc
 	running       *prometheus.Desc
 	suspended     *prometheus.Desc
 	runningCpus   *prometheus.Desc
@@ -120,6 +131,7 @@ func NewUsersCollector() *UsersCollector {
 	labels := []string{"user"}
 	return &UsersCollector{
 		pending:       prometheus.NewDesc("slurm_user_jobs_pending", "Pending jobs for user", labels, nil),
+		pendingQOS:    prometheus.NewDesc("slurm_user_jobs_pendingQOS", "Pending jobs for user due to QOS", labels, nil),
 		running:       prometheus.NewDesc("slurm_user_jobs_running", "Running jobs for user", labels, nil),
 		suspended:     prometheus.NewDesc("slurm_user_jobs_suspended", "Suspended jobs for user", labels, nil),
 		runningCpus:   prometheus.NewDesc("slurm_user_cpus_running", "Running cpus for user", labels, nil),
@@ -133,6 +145,7 @@ func NewUsersCollector() *UsersCollector {
 
 func (uc *UsersCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- uc.pending
+	ch <- uc.pendingQOS
 	ch <- uc.running
 	ch <- uc.suspended
 	ch <- uc.pendingCpus
@@ -148,6 +161,9 @@ func (uc *UsersCollector) Collect(ch chan<- prometheus.Metric) {
 	for u := range um {
 		if um[u].pending > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.pending, prometheus.GaugeValue, um[u].pending, u)
+		}
+		if um[u].pendingQOS > 0 {
+			ch <- prometheus.MustNewConstMetric(uc.pendingQOS, prometheus.GaugeValue, um[u].pendingQOS, u)
 		}
 		if um[u].running > 0 {
 			ch <- prometheus.MustNewConstMetric(uc.running, prometheus.GaugeValue, um[u].running, u)

@@ -16,7 +16,7 @@ func TestParseUsersMetrics(t *testing.T) {
 	//t.Error(data)
 	metrics := ParseUsersMetrics(data)
 	for k, v := range metrics {
-		//t.Error(k, v)
+		t.Error(k, v)
 		t.Log(k, v)
 	}
 	//t.Logf("%+v", ParseNodesInfoMetrics(data))
