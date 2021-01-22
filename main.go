@@ -34,6 +34,7 @@ func init() {
 	prometheus.MustRegister(NewAccountsCollector())   // from accounts.go
 	prometheus.MustRegister(NewUsersCollector())      // from users.go
 	prometheus.MustRegister(NewPartitionsCollector()) // from partitions.go
+	prometheus.MustRegister(NewFSCollector())         // from filesystem.go
 }
 
 var listenAddress = flag.String(
